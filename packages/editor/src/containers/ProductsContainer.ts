@@ -1,64 +1,45 @@
 import * as PIXI from 'pixi.js'
+import F from '../UI/controls/functions'
 import { Blueprint } from '../core/Blueprint'
-import { Entity } from '../core/Entity'
-
-class Node {
-    public readonly number;
-    public readonly inbound: Set<Node> = new Set()
-    public readonly outbound: Set<Node> = new Set()
-
-    public constructor(number) {
-        this.number = number
-    }
-}
-
-type BeltProducts =
-    public constructor(left: Node, right: Node) {
-        this.left = left;
-        this.right = right;
-    }
-    public readonly left: Node
-    public readonly right: Node
-}
+import { IProducts, ProductsCalculator } from './ProductsCalculator'
 
 export class ProductsContainer extends PIXI.Container {
     private readonly bp: Blueprint
-    private readonly nodes: Map<number, Node> = new Map()
-    private readonly dirty: Set<number> = new Set()
+
+    private readonly calculator: ProductsCalculator
+
+    private readonly icons: Map<string, PIXI.DisplayObject[]>
 
     public constructor(bp: Blueprint) {
         super()
         this.bp = bp
-        this.bp.on('create-entity', this.onCreateEntity)
-        this.bp.on('remove-entity', this.onRemoveEntity)
-    }
+        this.icons = new Map()
+        this.calculator = new ProductsCalculator(
+            pt => bp.entityPositionGrid.getEntityAtPosition(pt.x, pt.y))
 
-    private onCreateEntity(entity: Entity): void {
-        // ignore walls, power poles, etc.
-        entity.on('direction', this.onEntityChange)
-    }
-
-    private removeEntity(entity: Entity): void {
-        const prior = this.nodes.get(entity.entityNumber)
-        if (prior) {
-            this.nodes.delete(entity.entityNumber)
-            prior.inbound.forEach(n => this.dirty.add(n.number))
-            prior.outbound.forEach(n => this.dirty.add(n.number))
+        for (const [, e] of this.bp.entities) {
+            this.calculator.onCreateEntity(e)
         }
+        this.calculator.on('products', this.onProductChange)
 
-    }
-    private onEntityChange(entity: Entity): void {
-        this.removeEntity(entity)
-        this.nodes.set(entity.entityNumber, new Node(entity.entityNumber))
-        this.dirty.add(entity.entityNumber)
+        this.bp.on('create-entity', this.calculator.onCreateEntity)
+        this.bp.on('remove-entity', this.calculator.onRemoveEntity)
     }
 
-    private onRemoveEntity(entity: Entity): void {
-        this.removeEntity(entity)
-        entity.off('direction', this.onEntityChange)
-    }
-
-    private calculate(): void {
-
+    private onProductChange(change: IProducts): void {
+        const key = `${change.entityNumber}`
+        if (this.icons.has(key)) {
+            this.icons.get(key).map(e => e.destroy())
+            this.icons.delete(key)
+        }
+        if (change.items.size > 0 && change.offset !== undefined) {
+            const sortedItems = [...change.items].sort()
+            this.icons.set(key, sortedItems.map((name, idx) => {
+                const icon = F.CreateIcon(name, 16)
+                icon.position.set(change.offset.x + idx * change.delta.x, change.offset.y + idx * change.delta.y)
+                this.addChild(icon)
+                return icon
+            }))
+        }
     }
 }
