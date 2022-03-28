@@ -19,6 +19,7 @@ import { PaintContainer } from './PaintContainer'
 import { PaintBlueprintContainer } from './PaintBlueprintContainer'
 import { OptimizedContainer } from './OptimizedContainer'
 import { GridData } from './GridData'
+import { ProductsContainer } from './ProductsContainer'
 
 export type GridPattern = 'checker' | 'grid'
 
@@ -77,6 +78,7 @@ export class BlueprintContainer extends PIXI.Container {
     public readonly wiresContainer: WiresContainer
     public readonly overlayContainer: OverlayContainer
     private readonly entityPaintSlot: PIXI.Container
+    private readonly productsContainer: ProductsContainer
 
     public hoverContainer: EntityContainer
     public paintContainer: PaintContainer
@@ -113,6 +115,7 @@ export class BlueprintContainer extends PIXI.Container {
         this.wiresContainer = new WiresContainer(this.bp)
         this.overlayContainer = new OverlayContainer(this)
         this.entityPaintSlot = new PIXI.Container()
+        this.productsContainer = new ProductsContainer(this.bp)
 
         this.addChild(
             this.grid,
@@ -122,6 +125,7 @@ export class BlueprintContainer extends PIXI.Container {
             this.underlayContainer,
             this.entitySprites,
             this.wiresContainer,
+            this.productsContainer,
             this.overlayContainer,
             this.entityPaintSlot
         )
@@ -473,21 +477,21 @@ export class BlueprintContainer extends PIXI.Container {
         const gridGraphics =
             pattern === 'checker'
                 ? new PIXI.Graphics()
-                      .beginFill(0x808080)
-                      .drawRect(0, 0, 32, 32)
-                      .drawRect(32, 32, 32, 32)
-                      .endFill()
-                      .beginFill(0xffffff)
-                      .drawRect(0, 32, 32, 32)
-                      .drawRect(32, 0, 32, 32)
-                      .endFill()
+                    .beginFill(0x808080)
+                    .drawRect(0, 0, 32, 32)
+                    .drawRect(32, 32, 32, 32)
+                    .endFill()
+                    .beginFill(0xffffff)
+                    .drawRect(0, 32, 32, 32)
+                    .drawRect(32, 0, 32, 32)
+                    .endFill()
                 : new PIXI.Graphics()
-                      .beginFill(0x808080)
-                      .drawRect(0, 0, 32, 32)
-                      .endFill()
-                      .beginFill(0xffffff)
-                      .drawRect(1, 1, 31, 31)
-                      .endFill()
+                    .beginFill(0x808080)
+                    .drawRect(0, 0, 32, 32)
+                    .endFill()
+                    .beginFill(0xffffff)
+                    .drawRect(1, 1, 31, 31)
+                    .endFill()
 
         const renderTexture = PIXI.RenderTexture.create({
             width: gridGraphics.width,

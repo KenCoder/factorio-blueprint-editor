@@ -264,9 +264,9 @@ class Blueprint extends EventEmitter {
             this.entityPositionGrid.setTileData(newValue)
             this.emit('create-entity', newValue)
         } else if (oldValue) {
+            this.emit('remove-entity', oldValue)
             this.entityPositionGrid.removeTileData(oldValue)
             oldValue.destroy()
-            this.emit('remove-entity')
         }
     }
 
@@ -505,11 +505,11 @@ class Blueprint extends EventEmitter {
             tilesOrEntities: (Tile | Entity)[],
             getItemName: (name: string) => string
         ): [string, number][] => [
-            ...tilesOrEntities.reduce<Map<string, number>>((map, tileOrEntity) => {
-                const itemName = getItemName(tileOrEntity.name)
-                return map.set(itemName, map.has(itemName) ? map.get(itemName) + 1 : 0)
-            }, new Map()),
-        ]
+                ...tilesOrEntities.reduce<Map<string, number>>((map, tileOrEntity) => {
+                    const itemName = getItemName(tileOrEntity.name)
+                    return map.set(itemName, map.has(itemName) ? map.get(itemName) + 1 : 0)
+                }, new Map()),
+            ]
 
         if (!this.entities.isEmpty()) {
             const getSize = (name: string): number => {
